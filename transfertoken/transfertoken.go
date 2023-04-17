@@ -147,7 +147,7 @@ func Start(checkStartTime time.Time){
 	ticker.Stop()
 	done <- true
 
-
+	copyLogfile()
 	logging.Start(conf.Transfertoken.Log_path, checkStartTime)
 	fmt.Println("erc20 token transfer stopped")
 }
