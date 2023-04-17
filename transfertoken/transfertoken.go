@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"fmt"
+	"l2_testing_tool/logging"
 	"log"
 	"math/big"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -30,6 +30,7 @@ type Transfertoken struct {
 	Interval 	float64 `toml:"interval"`
 	Minute 	int `toml:"minute"`
 	Tokenaddress 	string `toml:"tokenaddress"`
+	Log_path string `toml:"log_path"`
 }
 
 type Config struct {
@@ -75,7 +76,7 @@ func TransferErc20token(h Host, t Transfertoken) {
 	hash := sha3.NewLegacyKeccak256()
 	hash.Write(transferFnSignature)
 	methodID := hash.Sum(nil)[:4]
-	fmt.Println(hexutil.Encode(methodID)) // 0xa9059cbb
+	// fmt.Println(hexutil.Encode(methodID)) // 0xa9059cbb
 
 	paddedAddress := common.LeftPadBytes(toAddress.Bytes(), 32)
 	// fmt.Println(hexutil.Encode(paddedAddress)) 
@@ -122,13 +123,12 @@ func TransferErc20token(h Host, t Transfertoken) {
 }
 
 func Start(){
+	checkStartTime := time.Now()
+
 	if _, err := toml.DecodeFile("config.toml", &conf); err != nil {
 		log.Println("hey! let's create config.toml")
 		log.Fatal(err)
 	}
-	fmt.Println(conf.Transfertoken.Interval)
-	fmt.Println(conf.Host.Url)
-	fmt.Println(conf.Transfertoken.Value)
 	ticker := time.NewTicker(time.Duration(conf.Transfertoken.Interval*1000) * time.Millisecond)
 	done := make(chan bool)
 
@@ -139,7 +139,6 @@ func Start(){
 				return
 			case <-ticker.C:
 				TransferErc20token(conf.Host, conf.Transfertoken)
-				fmt.Println("Run your method here...")
 			}
 		}
 	}()
@@ -147,5 +146,6 @@ func Start(){
 	time.Sleep(time.Duration(conf.Transfertoken.Minute) * time.Minute)
 	ticker.Stop()
 	done <- true
-	fmt.Println("Ticker stopped.")
+	logging.Start(conf.Transfertoken.Log_path, checkStartTime)
+	fmt.Println("erc20 token transfer stopped")
 }
