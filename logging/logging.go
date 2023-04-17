@@ -43,7 +43,7 @@ func readTimeNow() (time.Time, error) {
 		return time.Time{}, err
 	}
 
-	fmt.Printf("Read time: %s\n", parsedTime.Format("2006-01-02 15:04:05"))
+	fmt.Printf("fixed time: %s\n", parsedTime.Format("2006-01-02 15:04:05"))
 	return parsedTime, nil
 }
 
@@ -58,8 +58,6 @@ func Start(){
 		if err != nil { log.Fatal(err)}
 		// 파일 열기
 		l := Conf.Transfererctoken.Log_path
-		// fmt.Println(T)
-		fmt.Println(l)
 		file, err := os.Open(l)
 		if err != nil {
 			panic(err)
@@ -115,7 +113,6 @@ func isBatchSentLogLine(logLine string) bool {
 func isAfterStartTime(logLine string, startTime time.Time) bool {
 	logTime, err := extractLogTime(logLine)
 	logTime = fixYear(logTime)
-	fmt.Println(logTime)
 	if err != nil {
 		// 시간을 추출할 수 없는 로그 라인인 경우에는 startTime 이후로 기록된 것으로 간주
 		return false
@@ -139,8 +136,3 @@ func extractLogTime(logLine string) (time.Time, error) {
 func fixYear(t time.Time) time.Time {
     return time.Date(2023, t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), t.Location())
 }
-// func extractLogTime(logLine string) (time.Time, error) {
-// 	const logTimeLayout = "2006-01-02T15:04:05-0700"
-// 	logTimeStr := logLine[0:26] // 로그 라인의 처음 26자리가 시간 정보
-// 	return time.Parse(logTimeLayout, logTimeStr)
-// }
