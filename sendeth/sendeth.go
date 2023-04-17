@@ -3,21 +3,44 @@ package sendeth
 import (
 	"context"
 	"fmt"
-	"l2_testing_tool/sendtx"
 	"log"
 	"math/big"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
-func SendEth(tps int, minute int){
 
-	check := 1000 / tps
 
-	ticker := time.NewTicker(time.Duration(check) * time.Millisecond)
+type Host struct {
+	Url string `toml:"url"`
+	Address    string `toml:"address"`
+	PrivateKey string `toml:"privatekey"`
+}
+
+type Sendeth struct {
+	Value float64 `toml:"value"`
+	Interval      float64 `toml:"interval"`
+	Minute int     `toml:"minute"`
+}
+
+type Config struct {
+	Host    Host    `toml:"host"`
+	Sendeth      Sendeth      `toml:"sendeth"`
+}
+
+var conf Config
+
+func SendEther(){
+	if _, err := toml.DecodeFile("config.toml", &conf); err != nil {
+		log.Println("hey! let's create config.toml")
+		log.Fatal(err)
+	}
+	
+	ticker := time.NewTicker(time.Duration(conf.Sendeth.Interval*1000) * time.Millisecond)
 	done := make(chan bool)
 
 	go func() {
@@ -26,28 +49,28 @@ func SendEth(tps int, minute int){
 			case <-done:
 				return
 			case <-ticker.C:
-				sendtx.SendTransaction(conf.Host.Url, conf.Tx.Eth_value, conf.Host.Address, conf.Host.PrivateKey,conf.Tx.TransactionPerSecond,conf.Tx.Time)
+				SendTransaction(conf.Host, conf.Sendeth)
 				fmt.Println("Run your method here...")
 			}
 		}
 	}()
 
-	time.Sleep(time.Duration(minute) * time.Minute)
+	time.Sleep(time.Duration(conf.Sendeth.Minute) * time.Minute)
 	ticker.Stop()
 	done <- true
 	fmt.Println("Ticker stopped.")
 }
 
 
-func SendTransaction(url string, amount int, address string, pvkey string, tps int, time int)(string, error){
+func SendTransaction(h Host, s Sendeth)(string, error){
 	// RPC URL 지정
-	client, err := ethclient.Dial(url)
+	client, err := ethclient.Dial(h.Url)
 	if err != nil {
 		log.Fatalf("Failed to connect to the Ethereum client: %v", err)
 	}
 
 	// private key를 지정합니다.
-	privateKey, err := crypto.HexToECDSA(pvkey)
+	privateKey, err := crypto.HexToECDSA(h.PrivateKey)
 	if err != nil {
 		log.Fatalf("Failed to retrieve private key: %v", err)
 	}
@@ -62,10 +85,10 @@ func SendTransaction(url string, amount int, address string, pvkey string, tps i
 	}
 
 	// 수신자 주소 가져오기
-	toAddress := common.HexToAddress(address)
+	toAddress := common.HexToAddress(h.Address)
 
 	// 전송할 이더 양 설정
-	value := ConvertToWei(amount)	
+	value := ConvertToWei(s.Value)	
 
 	// data 값 설정 (일반적으로 이 값은 빈 바이트 배열입니다)
 	var data []byte
@@ -78,7 +101,7 @@ func SendTransaction(url string, amount int, address string, pvkey string, tps i
 	}	
 
 	// 출력big.NewInt(0)
-	fmt.Printf("\n##### Nonce: %d, toAddress: %s, value: %d, chainID: %d #####\n", nonce, toAddress, amount, chainID)
+	fmt.Printf("\n##### Nonce: %d, toAddress: %s, value: %d, chainID: %d #####\n", nonce, toAddress, value, chainID)
 
 	// 새로운 전송 트랜잭션 생성
 	tx := types.NewTransaction(nonce, toAddress, value, uint64(21000), big.NewInt(0), data)
@@ -102,7 +125,7 @@ func SendTransaction(url string, amount int, address string, pvkey string, tps i
 	return txHash, nil
 }
 
-func ConvertToWei(ether int) *big.Int {
+func ConvertToWei(ether float64) *big.Int {
 	wei := big.NewInt(0)
 	wei.Exp(big.NewInt(10), big.NewInt(18), nil) // 10^18
 	wei.Mul(wei, big.NewInt(int64(ether)))

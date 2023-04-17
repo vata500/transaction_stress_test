@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"time"
 
+	"github.com/BurntSushi/toml"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -16,13 +18,34 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-func Transfertoken() {
-	client, err := ethclient.Dial("")
+
+type Host struct {
+	Url string `toml:"url"`
+	Address    string `toml:"address"`
+	PrivateKey string `toml:"privatekey"`
+}
+
+type Transfertoken struct {
+	Value 	float64 `toml:"value"`
+	Interval	 float64 `toml:"inteval"`
+	Minute 	int `toml:"minute"`
+	Tokenaddress 	string `toml:"tokenaddress"`
+}
+
+type Config struct {
+	Host    Host    `toml:"host"`
+	Transfertoken     Transfertoken     `toml:"transfertoken"`
+}
+
+var conf Config
+
+func TransferErc20token(h Host, t Transfertoken) {
+	client, err := ethclient.Dial(h.Url)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	privateKey, err := crypto.HexToECDSA("")
+	privateKey, err := crypto.HexToECDSA(h.PrivateKey)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -45,8 +68,8 @@ func Transfertoken() {
 		log.Fatal(err)
 	}
 
-	toAddress := common.HexToAddress("")
-	tokenAddress := common.HexToAddress("")
+	toAddress := common.HexToAddress(h.Address)
+	tokenAddress := common.HexToAddress(conf.Transfertoken.Tokenaddress)
 
 	transferFnSignature := []byte("transfer(address,uint256)")
 	hash := sha3.NewLegacyKeccak256()
@@ -57,8 +80,9 @@ func Transfertoken() {
 	paddedAddress := common.LeftPadBytes(toAddress.Bytes(), 32)
 	fmt.Println(hexutil.Encode(paddedAddress)) 
 
+	toStringValue := fmt.Sprintf("%f",t.Value)
 	amount := new(big.Int)
-	amount.SetString("0.00001", 10) // sets the value to 1000 tokens, in the token denomination
+	amount.SetString(toStringValue, 10) // sets the value to 1000 tokens, in the token denomination
 
 	paddedAmount := common.LeftPadBytes(amount.Bytes(), 32)
 	fmt.Println(hexutil.Encode(paddedAmount))
@@ -95,4 +119,33 @@ func Transfertoken() {
 	}
 
 	fmt.Printf("tx sent: %s", signedTx.Hash().Hex())
+}
+
+func Start(){
+	if _, err := toml.DecodeFile("config.toml", &conf); err != nil {
+		log.Println("hey! let's create config.toml")
+		log.Fatal(err)
+	}
+	fmt.Println(conf.Transfertoken.Interval)
+	fmt.Println(conf.Host.Url)
+	fmt.Println(conf.Transfertoken.Value)
+	ticker := time.NewTicker(time.Duration(conf.Transfertoken.Interval*1000) * time.Millisecond)
+	done := make(chan bool)
+
+	go func() {
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+				TransferErc20token(conf.Host, conf.Transfertoken)
+				fmt.Println("Run your method here...")
+			}
+		}
+	}()
+
+	time.Sleep(time.Duration(conf.Transfertoken.Minute) * time.Minute)
+	ticker.Stop()
+	done <- true
+	fmt.Println("Ticker stopped.")
 }
