@@ -3,35 +3,61 @@ package logging
 import (
 	"bufio"
 	"fmt"
-	"l2_testing_tool/transfertoken"
 	"log"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/BurntSushi/toml"
 )
-func readTimeNow() time.Time {
+
+type Transfererctoken struct {
+	Value 	float64 `toml:"value"`
+	Interval 	float64 `toml:"interval"`
+	Minute 	int `toml:"minute"`
+	Tokenaddress 	string `toml:"tokenaddress"`
+	Log_path string `toml:"log_path"`
+}
+
+type Config struct {
+	Transfererctoken     Transfererctoken     `toml:"transfererctoken"`
+}
+
+func readTimeNow() (time.Time, error) {
 	f, err := os.Open("./timeNow")
 	if err != nil {
-		log.Fatal(err)
+		return time.Time{}, err
 	}
 	defer f.Close()
 
-	var t time.Time
-	_, err = fmt.Fscanf(f, "%s", &t)
-	if err != nil {
-		log.Fatal(err)
+	scanner := bufio.NewScanner(f)
+	if !scanner.Scan() {
+		return time.Time{}, scanner.Err()
 	}
 
-	fmt.Printf("Read time: %s\n", t.Format("2006-01-02 15:04:05"))
-	return t
+	t := scanner.Text()
+	parsedTime, err := time.Parse("2006-01-02 15:04:05", t)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	fmt.Printf("Read time: %s\n", parsedTime.Format("2006-01-02 15:04:05"))
+	return parsedTime, nil
 }
 
+var Conf Config
+
 func Start(){
-		T := readTimeNow()
+	if _, err := toml.DecodeFile("config.toml", &Conf); err != nil {
+		log.Println("hey! let's create config.toml")
+		log.Fatal(err)
+	}
+		T, err := readTimeNow()
+		if err != nil { log.Fatal(err)}
 		// 파일 열기
-		l := transfertoken.Conf.Transfererctoken.Log_path
-		fmt.Println(T)
-		fmt.Println("시작한 시간입니다.")
+		l := Conf.Transfererctoken.Log_path
+		// fmt.Println(T)
+		fmt.Println(l)
 		file, err := os.Open(l)
 		if err != nil {
 			panic(err)
@@ -53,8 +79,6 @@ func Start(){
 		if err := scanner.Err(); err != nil {
 			panic(err)
 		}
-		// // 결과 출력
-		// fmt.Println(batchSentList)
 
 		for _, line := range batchSentList {
 			fmt.Println(line)
