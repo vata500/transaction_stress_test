@@ -27,7 +27,7 @@ type Host struct {
 
 type Transfertoken struct {
 	Value 	float64 `toml:"value"`
-	Interval	 float64 `toml:"inteval"`
+	Interval 	float64 `toml:"interval"`
 	Minute 	int `toml:"minute"`
 	Tokenaddress 	string `toml:"tokenaddress"`
 }
@@ -78,14 +78,14 @@ func TransferErc20token(h Host, t Transfertoken) {
 	fmt.Println(hexutil.Encode(methodID)) // 0xa9059cbb
 
 	paddedAddress := common.LeftPadBytes(toAddress.Bytes(), 32)
-	fmt.Println(hexutil.Encode(paddedAddress)) 
+	// fmt.Println(hexutil.Encode(paddedAddress)) 
 
 	toStringValue := fmt.Sprintf("%f",t.Value)
 	amount := new(big.Int)
 	amount.SetString(toStringValue, 10) // sets the value to 1000 tokens, in the token denomination
 
 	paddedAmount := common.LeftPadBytes(amount.Bytes(), 32)
-	fmt.Println(hexutil.Encode(paddedAmount))
+	// fmt.Println(hexutil.Encode(paddedAmount))
 
 	var data []byte
 	data = append(data, methodID...)
@@ -99,7 +99,7 @@ func TransferErc20token(h Host, t Transfertoken) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(gasLimit) // 23256
+	// fmt.Println(gasLimit) // 23256
 
 	tx := types.NewTransaction(nonce, tokenAddress, value, gasLimit, gasPrice, data)
 

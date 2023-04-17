@@ -34,7 +34,7 @@ type Config struct {
 
 var conf Config
 
-func SendEther(){
+func Start(){
 	if _, err := toml.DecodeFile("config.toml", &conf); err != nil {
 		log.Println("hey! let's create config.toml")
 		log.Fatal(err)
