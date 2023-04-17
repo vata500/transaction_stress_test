@@ -2,9 +2,11 @@ package logging
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -112,6 +114,8 @@ func isBatchSentLogLine(logLine string) bool {
 
 func isAfterStartTime(logLine string, startTime time.Time) bool {
 	logTime, err := extractLogTime(logLine)
+	logTime = fixYear(logTime)
+	fmt.Println(logTime)
 	if err != nil {
 		// 시간을 추출할 수 없는 로그 라인인 경우에는 startTime 이후로 기록된 것으로 간주
 		return false
@@ -120,7 +124,23 @@ func isAfterStartTime(logLine string, startTime time.Time) bool {
 }
 
 func extractLogTime(logLine string) (time.Time, error) {
-	const logTimeLayout = "2006-01-02T15:04:05-0700"
-	logTimeStr := logLine[0:26] // 로그 라인의 처음 26자리가 시간 정보
-	return time.Parse(logTimeLayout, logTimeStr)
+	re := regexp.MustCompile(`\[(\d{2}-\d{2}\|\d{2}:\d{2}:\d{2}\.\d{3})\]`)
+	match := re.FindStringSubmatch(logLine)
+	if len(match) == 0 {
+			return time.Time{}, errors.New("time not found in log line")
+	}
+	t, err := time.Parse("01-02|15:04:05.000", match[1])
+	if err != nil {
+			return time.Time{}, err
+	}
+	return t, nil
 }
+
+func fixYear(t time.Time) time.Time {
+    return time.Date(2023, t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), t.Location())
+}
+// func extractLogTime(logLine string) (time.Time, error) {
+// 	const logTimeLayout = "2006-01-02T15:04:05-0700"
+// 	logTimeStr := logLine[0:26] // 로그 라인의 처음 26자리가 시간 정보
+// 	return time.Parse(logTimeLayout, logTimeStr)
+// }
