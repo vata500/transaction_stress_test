@@ -25,7 +25,7 @@ type Host struct {
 	PrivateKey string `toml:"privatekey"`
 }
 
-type Transfertoken struct {
+type Transfererctoken struct {
 	Value 	float64 `toml:"value"`
 	Interval 	float64 `toml:"interval"`
 	Minute 	int `toml:"minute"`
@@ -35,12 +35,12 @@ type Transfertoken struct {
 
 type Config struct {
 	Host    Host    `toml:"host"`
-	Transfertoken     Transfertoken     `toml:"transfertoken"`
+	Transfererctoken     Transfererctoken     `toml:"transfererctoken"`
 }
 
-var conf Config
+var Conf Config
 
-func TransferErc20token(h Host, t Transfertoken) {
+func TransferErc20token(h Host, t Transfererctoken) {
 	client, err := ethclient.Dial(h.Url)
 	if err != nil {
 		log.Fatal(err)
@@ -70,7 +70,7 @@ func TransferErc20token(h Host, t Transfertoken) {
 	}
 
 	toAddress := common.HexToAddress(h.Address)
-	tokenAddress := common.HexToAddress(conf.Transfertoken.Tokenaddress)
+	tokenAddress := common.HexToAddress(Conf.Transfererctoken.Tokenaddress)
 
 	transferFnSignature := []byte("transfer(address,uint256)")
 	hash := sha3.NewLegacyKeccak256()
@@ -123,13 +123,13 @@ func TransferErc20token(h Host, t Transfertoken) {
 }
 
 func Start(checkStartTime time.Time){
-	createTimeNow(checkStartTime)
+	createTimeNowFile(checkStartTime)
 
-	if _, err := toml.DecodeFile("config.toml", &conf); err != nil {
+	if _, err := toml.DecodeFile("config.toml", &Conf); err != nil {
 		log.Println("hey! let's create config.toml")
 		log.Fatal(err)
 	}
-	ticker := time.NewTicker(time.Duration(conf.Transfertoken.Interval*1000) * time.Millisecond)
+	ticker := time.NewTicker(time.Duration(Conf.Transfererctoken.Interval*1000) * time.Millisecond)
 	done := make(chan bool)
 
 	go func() {
@@ -138,12 +138,12 @@ func Start(checkStartTime time.Time){
 			case <-done:
 				return
 			case <-ticker.C:
-				TransferErc20token(conf.Host, conf.Transfertoken)
+				TransferErc20token(Conf.Host, Conf.Transfererctoken)
 			}
 		}
 	}()
 
-	time.Sleep(time.Duration(conf.Transfertoken.Minute) * time.Minute)
+	time.Sleep(time.Duration(Conf.Transfererctoken.Minute) * time.Minute)
 	ticker.Stop()
 	done <- true
 
@@ -151,8 +151,8 @@ func Start(checkStartTime time.Time){
 	fmt.Println("erc20 token transfer stopped")
 }
 
-func createTimeNow(checkStartTime time.Time){
-	f, err := os.Create("time_now.log")
+func createTimeNowFile(checkStartTime time.Time){
+	f, err := os.Create("timeNow")
 	if err != nil {
 		log.Fatal(err)
 	}

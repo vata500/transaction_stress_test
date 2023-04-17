@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"l2_testing_tool/logging"
 	"l2_testing_tool/sendeth"
 	"l2_testing_tool/transfertoken"
 	"time"
@@ -21,11 +22,7 @@ func main() {
 		sendeth.Start()
 	}
 	if *loggingPtr {
-		sendeth.Start()
+		logging.Start()
 	}
-
-
-
-	// logging.Start("nitro.log")
 }
 

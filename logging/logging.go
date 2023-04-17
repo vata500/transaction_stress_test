@@ -3,17 +3,36 @@ package logging
 import (
 	"bufio"
 	"fmt"
+	"l2_testing_tool/transfertoken"
 	"log"
 	"os"
 	"strings"
 	"time"
 )
+func readTimeNow() time.Time {
+	f, err := os.Open("./timeNow")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
 
-func Start(log_path string, startTime time.Time){
+	var t time.Time
+	_, err = fmt.Fscanf(f, "%s", &t)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Read time: %s\n", t.Format("2006-01-02 15:04:05"))
+	return t
+}
+
+func Start(){
+		T := readTimeNow()
 		// 파일 열기
-		fmt.Println(startTime)
+		l := transfertoken.Conf.Transfererctoken.Log_path
+		fmt.Println(T)
 		fmt.Println("시작한 시간입니다.")
-		file, err := os.Open(log_path)
+		file, err := os.Open(l)
 		if err != nil {
 			panic(err)
 		}
@@ -25,7 +44,7 @@ func Start(log_path string, startTime time.Time){
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
 			line := scanner.Text()
-			if isBatchSentLogLine(line) && isAfterStartTime(line, time.Now()) {
+			if isBatchSentLogLine(line) && isAfterStartTime(line, T) {
 				batchSentList = append(batchSentList, line)
 				}
 			}
