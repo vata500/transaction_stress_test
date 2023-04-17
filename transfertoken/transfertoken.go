@@ -119,11 +119,10 @@ func TransferErc20token(h Host, t Transfertoken) {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("tx sent: %s", signedTx.Hash().Hex())
+	fmt.Printf("tx sent: %s\n", signedTx.Hash().Hex())
 }
 
-func Start(){
-	checkStartTime := time.Now()
+func Start(checkStartTime time.Time){
 
 	if _, err := toml.DecodeFile("config.toml", &conf); err != nil {
 		log.Println("hey! let's create config.toml")
