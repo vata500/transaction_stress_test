@@ -4,10 +4,9 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"fmt"
-	"l2_testing_tool/logging"
 	"log"
 	"math/big"
-	"os/exec"
+	"os"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -124,6 +123,7 @@ func TransferErc20token(h Host, t Transfertoken) {
 }
 
 func Start(checkStartTime time.Time){
+	createTimeNow(checkStartTime)
 
 	if _, err := toml.DecodeFile("config.toml", &conf); err != nil {
 		log.Println("hey! let's create config.toml")
@@ -147,16 +147,19 @@ func Start(checkStartTime time.Time){
 	ticker.Stop()
 	done <- true
 
-	copyLogfile()
-	logging.Start(conf.Transfertoken.Log_path, checkStartTime)
+	// logging.Start(conf.Transfertoken.Log_path, checkStartTime)
 	fmt.Println("erc20 token transfer stopped")
 }
 
-func copyLogfile(){
-	cmd := exec.Command("/bin/sh", "-c", "sudo cp /var/lib/docker/volumes/nitro_poster-data/_data/nitro.log /home/ubuntu/transaction_stress_test/nitro.log")
-	output, err := cmd.Output()
+func createTimeNow(checkStartTime time.Time){
+	f, err := os.Create("time_now.log")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	fmt.Println(string(output))
+	defer f.Close()
+
+	_, err = fmt.Fprintf(f, "%s", checkStartTime.Format("2006-01-02 15:04:05"))
+	if err != nil {
+		log.Fatal(err)
+	}
 }
