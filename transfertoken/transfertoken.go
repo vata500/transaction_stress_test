@@ -7,6 +7,7 @@ import (
 	"l2_testing_tool/logging"
 	"log"
 	"math/big"
+	"os/exec"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -145,6 +146,17 @@ func Start(checkStartTime time.Time){
 	time.Sleep(time.Duration(conf.Transfertoken.Minute) * time.Minute)
 	ticker.Stop()
 	done <- true
+
+
 	logging.Start(conf.Transfertoken.Log_path, checkStartTime)
 	fmt.Println("erc20 token transfer stopped")
+}
+
+func copyLogfile(){
+	cmd := exec.Command("/bin/sh", "-c", "sudo cp /var/lib/docker/volumes/nitro_poster-data/_data/nitro.log /home/ubuntu/transaction_stress_test/nitro.log")
+	output, err := cmd.Output()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(output))
 }
