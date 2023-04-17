@@ -1,4 +1,4 @@
-package tokentransfer
+package transfertoken
 
 import (
 	"context"
@@ -16,7 +16,7 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-func Tokentransfer() {
+func Transfertoken() {
 	client, err := ethclient.Dial("")
 	if err != nil {
 		log.Fatal(err)

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"l2_testing_tool/erc20deploy"
 	"log"
 
 	"github.com/BurntSushi/toml"
@@ -14,14 +13,22 @@ type Host struct {
 }
 
 type Tx struct {
-	Eth_value int `toml:"eth_value"`
-	TransactionPerSecond      int `toml:"transactionPerSecond"`
-	Time int     `toml:"time"`
+	Value int `toml:"value"`
+	Interval      int `toml:"interval"`
+	Minute int     `toml:"minute"`
+}
+
+type Transfertoken struct {
+	Value 	int `toml:"value"`
+	Interval	 int `toml:"inteval"`
+	Minute 	int `toml:"minute"`
+	Tokenaddress 	string `toml:"tokenaddress"`
 }
 
 type Config struct {
 	Host    Host    `toml:"host"`
 	Tx      Tx      `toml:"tx"`
+	Transfertoken Transfertoken `toml:"transfertoken"`
 }
 
 var conf Config
@@ -34,7 +41,7 @@ func main() {
 	}
 
 	
- 	erc20deploy.Erc20deploy(conf.Host.PrivateKey, conf.Host.Url)
+ 	//erc20deploy.Erc20deploy(conf.Host.PrivateKey, conf.Host.Url)
 	//sendtx.SendEth(conf.Tx.TransactionPerSecond, conf.Tx.Time)
 
 }

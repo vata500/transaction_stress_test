@@ -1,8 +1,9 @@
-package sendtx
+package sendeth
 
 import (
 	"context"
 	"fmt"
+	"l2_testing_tool/sendtx"
 	"log"
 	"math/big"
 	"time"
