@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"l2_testing_tool/logging"
 	"l2_testing_tool/sendeth"
 	"l2_testing_tool/transfertoken"
@@ -16,6 +17,7 @@ func main() {
 
 	if *transferPtr {
 		checkStartTime := time.Now()
+		fmt.Printf("%s",checkStartTime)
 		transfertoken.Start(checkStartTime)
 	}
 	if *sendPtr {
