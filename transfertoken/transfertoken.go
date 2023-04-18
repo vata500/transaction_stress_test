@@ -162,7 +162,7 @@ func TransferErc20token(h Host, t Transfererctoken, receiveAddr ...string) {
 		log.Fatal(err)
 	}
 	Total_tx += 1
-	fmt.Printf("tx sent: %s\n", signedTx.Hash().Hex())
+	fmt.Printf("tx sent: %s, tx sender: %s\n", signedTx.Hash().Hex(), fromAddress)
 
 	// txHash := signedTx.Hash()
 
