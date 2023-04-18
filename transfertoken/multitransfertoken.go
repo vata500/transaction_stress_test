@@ -27,7 +27,7 @@ func MultiStart(a []Host){
 
 	n := len(a)
 
-	ticker := time.NewTicker(time.Duration(Conf.Transfererctoken.Interval*1000) * time.Millisecond)
+	// ticker := time.NewTicker(time.Duration(Conf.Transfererctoken.Interval*1000) * time.Millisecond)
 	done := make(chan bool)
 
 	for i := 0; i < n; i++ {
@@ -37,15 +37,16 @@ func MultiStart(a []Host){
 				select {
 				case <-done:
 					return
-				case <-ticker.C:
+				default:
 					TransferErc20token(host, Conf.Transfererctoken)
+					time.Sleep(time.Duration(Conf.Transfererctoken.Interval*1000) * time.Millisecond)
 				}
 			}
 		}()
 	}
 
 	time.Sleep(time.Duration(Conf.Transfererctoken.Minute) * time.Minute)
-	ticker.Stop()
+	// ticker.Stop()
 	done <- true
 
 	fmt.Println("erc20 token transfer stopped")
