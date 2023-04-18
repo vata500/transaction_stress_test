@@ -72,11 +72,9 @@ func Start(checkStartTime time.Time){
 		done <- true
 
 		fmt.Println("erc20 token transfer stopped")
-		result(checkStartTime)
 	}
+	result(checkStartTime)
 }
-
-
 
 func TransferErc20token(h Host, t Transfererctoken, receiveAddr ...string) {
 	client, err := ethclient.Dial(h.Url)
@@ -165,6 +163,15 @@ func TransferErc20token(h Host, t Transfererctoken, receiveAddr ...string) {
 	}
 	Total_tx += 1
 	fmt.Printf("tx sent: %s\n", signedTx.Hash().Hex())
+
+	// txHash := signedTx.Hash()
+
+	// // receipt, err := client.TransactionReceipt(context.Background(), txHash)
+	// // if err != nil {
+	// //    	 log.Fatal(err)
+	// // }
+
+	// fmt.Printf("Transaction receipt: %v\n", receipt)
 }
 
 func createTimeNowFile(checkStartTime time.Time){

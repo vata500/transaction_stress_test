@@ -4,42 +4,63 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-type Account struct {
-	Url string
-	Address    string
-	PrivateKey string
-}
-
 func MultiTransferToken(n int) {
 	Accounts := NewAccounts(n)
 	fmt.Println(Accounts)
 
-	// for i := 0; i < len(Accounts); i++ {
-	// 	account := Accounts[i]
-	// 	// 구조체의 변수를 메서드 인자로 사용
-	// 	receiveToken(account)
-	// 	fmt.Printf("Account %d: %s\n", i, account.Address)
-	// 	// ...
-	// }
+	for i := 0; i < len(Accounts); i++ {
+		account := Accounts[i]
+		receiveToken(account) // Host account로 부터 erc20 토큰 수령 
+		fmt.Printf("Account %d: %s\n", i, account.Address)
+	}
 
-
+	MultiStart(Accounts)
 }
 
-func receiveToken(a Account) {
-	// TransferErc20token(a, Conf.Transfererctoken, )
+func MultiStart(a []Host){
 
+	n := len(a)
+
+	ticker := time.NewTicker(time.Duration(Conf.Transfererctoken.Interval*1000) * time.Millisecond)
+	done := make(chan bool)
+
+	for i := 0; i < n; i++ {
+		host := a[i]
+		go func() {
+			for {
+				select {
+				case <-done:
+					return
+				case <-ticker.C:
+					TransferErc20token(host, Conf.Transfererctoken)
+				}
+			}
+		}()
+	}
+
+	time.Sleep(time.Duration(Conf.Transfererctoken.Minute) * time.Minute)
+	ticker.Stop()
+	done <- true
+
+	fmt.Println("erc20 token transfer stopped")
 }
 
-func NewAccounts(n int) []Account {
-	accounts := make([]Account, 0, n)
-	pvk, pbk := GenerateKeyPair()
+func receiveToken(a Host) {
+	receiveAddress := a.Address
+	TransferErc20token(Conf.Host, Conf.Transfererctoken, receiveAddress)
+}
+
+func NewAccounts(n int) []Host {
+	accounts := make([]Host, 0, n)
 	for i := 1; i <= n; i++ {
-        account := Account{Url: Conf.Host.Url, Address: pbk, PrivateKey: pvk}
+		pvk, pbk := GenerateKeyPair()
+        account := Host{Url: Conf.Host.Url, Address: pbk, PrivateKey: pvk}
         accounts = append(accounts, account)
     }
 	return accounts
