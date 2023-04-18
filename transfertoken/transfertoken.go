@@ -18,7 +18,6 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-
 type Host struct {
 	Url string `toml:"url"`
 	Address    string `toml:"address"`
@@ -39,6 +38,7 @@ type Config struct {
 }
 
 var Conf Config
+var Total_tx = 0
 
 func TransferErc20token(h Host, t Transfererctoken) {
 	client, err := ethclient.Dial(h.Url)
@@ -118,7 +118,7 @@ func TransferErc20token(h Host, t Transfererctoken) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	Total_tx += 1
 	fmt.Printf("tx sent: %s\n", signedTx.Hash().Hex())
 }
 
@@ -149,6 +149,7 @@ func Start(checkStartTime time.Time){
 
 	// logging.Start(conf.Transfertoken.Log_path, checkStartTime)
 	fmt.Println("erc20 token transfer stopped")
+	result(checkStartTime)
 }
 
 func createTimeNowFile(checkStartTime time.Time){
@@ -162,4 +163,11 @@ func createTimeNowFile(checkStartTime time.Time){
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func result(startTime time.Time){
+	endTime := time.Now()
+	duration := endTime.Sub(startTime)
+	Average_TPS := float64(Total_tx) / duration.Seconds()
+	fmt.Printf("Total_Tx : %d, Average_TPS : %f\n", Total_tx, Average_TPS)
 }
