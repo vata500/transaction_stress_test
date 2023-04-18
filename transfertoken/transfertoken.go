@@ -78,7 +78,7 @@ func Start(checkStartTime time.Time){
 
 
 
-func TransferErc20token(h Host, t Transfererctoken) {
+func TransferErc20token(h Host, t Transfererctoken, receiveAddr ...string) {
 	client, err := ethclient.Dial(h.Url)
 	if err != nil {
 		log.Fatal(err)
@@ -107,7 +107,14 @@ func TransferErc20token(h Host, t Transfererctoken) {
 		log.Fatal(err)
 	}
 
-	toAddress := common.HexToAddress(h.Address)
+	var toAddress common.Address
+
+	// account 인자로 전달받았을 경우, toAddress에 account address를 삽입.
+	if len(receiveAddr) > 0 {
+		toAddress = common.HexToAddress(receiveAddr[0])
+	} else {
+		toAddress = common.HexToAddress(h.Address)
+	}
 	tokenAddress := common.HexToAddress(Conf.Transfererctoken.Tokenaddress)
 
 	transferFnSignature := []byte("transfer(address,uint256)")

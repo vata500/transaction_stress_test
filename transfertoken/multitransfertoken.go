@@ -2,12 +2,9 @@ package transfertoken
 
 import (
 	"crypto/ecdsa"
-	"crypto/rand"
-	"crypto/sha3"
-	"encoding/hex"
 	"fmt"
+	"log"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -19,41 +16,61 @@ type Account struct {
 }
 
 func MultiTransferToken(n int) {
-	NewAccounts(n)
+	Accounts := NewAccounts(n)
+	fmt.Println(Accounts)
+
+	// for i := 0; i < len(Accounts); i++ {
+	// 	account := Accounts[i]
+	// 	// 구조체의 변수를 메서드 인자로 사용
+	// 	receiveToken(account)
+	// 	fmt.Printf("Account %d: %s\n", i, account.Address)
+	// 	// ...
+	// }
+
+
+}
+
+func receiveToken(a Account) {
+	// TransferErc20token(a, Conf.Transfererctoken, )
+
 }
 
 func NewAccounts(n int) []Account {
 	accounts := make([]Account, 0, n)
+	pvk, pbk := GenerateKeyPair()
 	for i := 1; i <= n; i++ {
-		pvk, err := GenerateKeyPair()
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Printf("pvk: %s\n", pvk)
-		// fmt.Printf("pvk: %s, pbk: %s: \n", pvk, pbk)
-        // account := Account{Url: Conf.Host.Url, Address: pbk, PrivateKey: pvk}
-        // accounts = append(accounts, account)
+        account := Account{Url: Conf.Host.Url, Address: pbk, PrivateKey: pvk}
+        accounts = append(accounts, account)
     }
 	return accounts
 }
 
+func GenerateKeyPair() (string, string) {
+   // 키 생성
+   privateKey, err := crypto.GenerateKey()
+   if err != nil {
+	   log.Fatal(err)
+   }
 
-func GenerateKeyPair() (common.Address, error) {
-    privateKey, _ := ecdsa.GenerateKey(crypto.S256(), rand.Reader)
-	Pvkey := PrivateKeyToAddress(privateKey)
-	return Pvkey, nil
-}
+   // 개인 키 출력
+   privateKeyBytes := crypto.FromECDSA(privateKey)
+   fmt.Println("Private Key:", hexutil.Encode(privateKeyBytes)[2:])
+   validPrivateKey := hexutil.Encode(privateKeyBytes)[2:]
 
-func PrivateKeyToAddress(privateKey *ecdsa.PrivateKey) common.Address {
-    publicKey := privateKey.Public()
-    publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-    if !ok {
-        return common.Address{}
-    }
-    publicKeyBytes := append(publicKeyECDSA.X.Bytes(), publicKeyECDSA.Y.Bytes()...)
-    hash := sha3.NewLegacyKeccak256()
-    hash.Write(publicKeyBytes)
-    address := hash.Sum(nil)[12:]
-    return common.BytesToAddress(address)
+
+   // 공개 키 추출
+   pvK, err := crypto.HexToECDSA(validPrivateKey)
+   if err != nil {
+	   log.Fatal(err)
+   }
+
+   publicKey := pvK.Public()
+   publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+   if !ok {
+	   log.Fatal("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
+   }
+   Address := crypto.PubkeyToAddress(*publicKeyECDSA)
+   AddressStr := Address.Hex()
+
+   return validPrivateKey, AddressStr
 }
