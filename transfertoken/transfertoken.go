@@ -163,11 +163,13 @@ func createTimeNowFile(checkStartTime time.Time){
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println()
 }
 
 func result(startTime time.Time){
+	Testing_Time := Conf.Transfererctoken.Minute *60
 	endTime := time.Now()
 	duration := endTime.Sub(startTime)
 	Average_TPS := float64(Total_tx) / duration.Seconds()
-	fmt.Printf("Total_Tx : %d, Average_TPS : %f\n", Total_tx, Average_TPS)
+	fmt.Printf("Total_Tx : %d, Average_TPS : %f\n, Testing_Time : %ds", Total_tx, Average_TPS, Testing_Time)
 }
