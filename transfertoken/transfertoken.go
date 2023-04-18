@@ -30,6 +30,7 @@ type Transfererctoken struct {
 	Minute 	int `toml:"minute"`
 	Tokenaddress 	string `toml:"tokenaddress"`
 	Log_path string `toml:"log_path"`
+	Accounts int `toml:"accounts"`
 }
 
 type Config struct {
@@ -39,6 +40,43 @@ type Config struct {
 
 var Conf Config
 var Total_tx = 0
+
+func Start(checkStartTime time.Time){
+	createTimeNowFile(checkStartTime)
+
+	// config.toml create instance
+	if _, err := toml.DecodeFile("config.toml", &Conf); err != nil {
+		log.Fatal(err)
+	}
+
+	// account가 있을 경우, go routine으로 병렬 트랜잭션 처리
+	if Conf.Transfererctoken.Accounts > 0 {
+		MultiTransferToken(Conf.Transfererctoken.Accounts)
+	} else {
+		ticker := time.NewTicker(time.Duration(Conf.Transfererctoken.Interval*1000) * time.Millisecond)
+		done := make(chan bool)
+
+		go func() {
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+				TransferErc20token(Conf.Host, Conf.Transfererctoken)
+			}
+		}
+		}()
+
+		time.Sleep(time.Duration(Conf.Transfererctoken.Minute) * time.Minute)
+		ticker.Stop()
+		done <- true
+
+		fmt.Println("erc20 token transfer stopped")
+		result(checkStartTime)
+	}
+}
+
+
 
 func TransferErc20token(h Host, t Transfererctoken) {
 	client, err := ethclient.Dial(h.Url)
@@ -122,36 +160,6 @@ func TransferErc20token(h Host, t Transfererctoken) {
 	fmt.Printf("tx sent: %s\n", signedTx.Hash().Hex())
 }
 
-func Start(checkStartTime time.Time){
-	createTimeNowFile(checkStartTime)
-
-	if _, err := toml.DecodeFile("config.toml", &Conf); err != nil {
-		log.Println("hey! let's create config.toml")
-		log.Fatal(err)
-	}
-	ticker := time.NewTicker(time.Duration(Conf.Transfererctoken.Interval*1000) * time.Millisecond)
-	done := make(chan bool)
-
-	go func() {
-		for {
-			select {
-			case <-done:
-				return
-			case <-ticker.C:
-				TransferErc20token(Conf.Host, Conf.Transfererctoken)
-			}
-		}
-	}()
-
-	time.Sleep(time.Duration(Conf.Transfererctoken.Minute) * time.Minute)
-	ticker.Stop()
-	done <- true
-
-	// logging.Start(conf.Transfertoken.Log_path, checkStartTime)
-	fmt.Println("erc20 token transfer stopped")
-	result(checkStartTime)
-}
-
 func createTimeNowFile(checkStartTime time.Time){
 	f, err := os.Create("timeNow")
 	if err != nil {
@@ -171,5 +179,5 @@ func result(startTime time.Time){
 	endTime := time.Now()
 	duration := endTime.Sub(startTime)
 	Average_TPS := float64(Total_tx) / duration.Seconds()
-	fmt.Printf("Total_Tx : %d, Average_TPS : %f\n, Testing_Time : %ds", Total_tx, Average_TPS, Testing_Time)
+	fmt.Printf("Total_Tx : %d, Average_TPS : %f, Testing_Time : %ds\n", Total_tx, Average_TPS, Testing_Time)
 }

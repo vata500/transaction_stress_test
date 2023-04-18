@@ -43,7 +43,7 @@ func readTimeNow() (time.Time, error) {
 		return time.Time{}, err
 	}
 
-	fmt.Printf("fixed time: %s\n", parsedTime.Format("2006-01-02 15:04:05"))
+	// fmt.Printf("fixed time: %s\n", parsedTime.Format("2006-01-02 15:04:05"))
 	return parsedTime, nil
 }
 
