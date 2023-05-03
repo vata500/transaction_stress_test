@@ -4,14 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"l2_testing_tool/logging"
-	"l2_testing_tool/sendeth"
 	"l2_testing_tool/transfertoken"
 	"time"
 )
 
 func main() {
 	transferPtr := flag.Bool("transfer", false, "Run transfer method")
-	sendPtr := flag.Bool("send", false, "Run send method")
 	loggingPtr := flag.Bool("logging", false, "Run logging method")
 	flag.Parse()
 
@@ -19,9 +17,6 @@ func main() {
 		checkStartTime := time.Now()
 		fmt.Printf("%s",checkStartTime)
 		transfertoken.Start(checkStartTime)
-	}
-	if *sendPtr {
-		sendeth.Start()
 	}
 	if *loggingPtr {
 		logging.Start()

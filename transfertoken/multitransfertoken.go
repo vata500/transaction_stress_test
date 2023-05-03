@@ -16,7 +16,7 @@ func MultiTransferToken(n int) {
 
 	for i := 0; i < len(Accounts); i++ {
 		account := Accounts[i]
-		receiveToken(account) // Host account로 부터 erc20 토큰 수령 
+		receive(account) // Host account로 부터 erc20 토큰 수령 
 		fmt.Printf("Account %d: %s\n", i, account.Address)
 	}
 
@@ -52,9 +52,10 @@ func MultiStart(a []Host){
 	fmt.Println("erc20 token transfer stopped")
 }
 
-func receiveToken(a Host) {
+func receive(a Host) {
 	receiveAddress := a.Address
-	TransferErc20token(Conf.Host, Conf.Transfererctoken, receiveAddress)
+	ReceiveETH(Conf.Host, receiveAddress, 100)
+	ReceiveToken(Conf.Host, Conf.Transfererctoken, receiveAddress)
 }
 
 func NewAccounts(n int) []Host {
