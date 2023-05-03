@@ -54,8 +54,12 @@ func MultiStart(a []Host){
 
 func receive(a Host) {
 	receiveAddress := a.Address
+
 	ReceiveETH(Conf.Host, receiveAddress, 100)
+	fmt.Printf("\nreceived ETH\n")
+
 	ReceiveToken(Conf.Host, Conf.Transfererctoken, receiveAddress)
+	fmt.Printf("received ERC-20 Token\n")
 }
 
 func NewAccounts(n int) []Host {
